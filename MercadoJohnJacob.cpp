@@ -2,7 +2,8 @@
 #include <vector>
 #include <string>
 #include <iomanip>
-#include <algorithm> 
+#include <algorithm>
+#include <cctype>
 using namespace std;
 
 struct Item {
@@ -19,7 +20,7 @@ vector<Item> allItems = {
     {"Vitality Crystal", "+230 HP", 300, 2}, {"Ares Belt", "+600 HP", 700, 2}, {"Antique Cuirass", "+920 HP", 2170, 2}
 };
 
-vector<int> inventoryPrice; 
+vector<int> inventoryPrice;
 
 void clearScreen() {
     system("cls");
@@ -38,7 +39,8 @@ void Continue() {
 
 int pendingTotalPrice() {
     int total = 0;
-    for (int shopItem : inventoryPrice) total += allItems[shopItem].price;
+    for (int shopItem : inventoryPrice)
+        total += allItems[shopItem].price;
     return total;
 }
 
@@ -54,24 +56,40 @@ void addItem(int shopItem) {
     Continue();
 }
 
-void displayItems(const vector<int> items, const string title) {
+int extractValue(const string& stat) {
+    int spacePos = stat.find(" ");
+    return stoi(stat.substr(1, spacePos - 1));
+}
+
+void displayItems(const vector<int>& items, const string title) {
     while (true) {
         cout << "--" << title << "--  Coins -> $" << coins;
-        int total = pendingTotalPrice();
-        if (total > 0) cout << " ->" << total;
+        if (!inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
         cout << "\n\n";
-        cout << left << setw(20) << "Item Name" << setw(12) << "Stat" << setw(8) << "Price\n";
-        cout << "--------------------------------------\n";
+
+        cout << left << setw(4) << "#" << setw(20) << "Item Name"
+             << setw(12) << "Stat" << "Price\n";
+        cout << "--------------------------------------------------\n";
+
         for (size_t i = 0; i < items.size(); ++i) {
             const Item& it = allItems[items[i]];
-            cout << "(" << i+1 << ") " << setw(18) << it.name << setw(12) << it.stat << "$" << it.price << "\n";
+            cout << left << setw(4) << "(" + to_string(i+1) + ")"
+                 << setw(20) << it.name << setw(12) << it.stat
+                 << "$" << it.price << "\n";
         }
+
         cout << "(B) Back\nChoose: ";
-        string choice; cin >> choice;
+        string choice;
+        cin >> choice;
         clearScreen();
+
         if (choice == "B" || choice == "b") break;
-        int c = stoi(choice) - 1;
-        if (c >= 0 && c < (int)items.size()) addItem(items[c]);
+
+        if (isdigit(choice[0])) {
+            int c = stoi(choice) - 1;
+            if (c >= 0 && c < (int)items.size())
+                addItem(items[c]);
+        }
     }
 }
 
@@ -80,19 +98,26 @@ void shopMenu() {
         cout << "---Shop---  Coins -> $" << coins;
         if (!inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
         cout << "\n(1) Weapons\n(2) Armors\n(B) Back\n\nChoose: ";
-        string choice; cin >> choice; clearScreen();
-        if (choice=="1") {
+
+        string choice;
+        cin >> choice;
+        clearScreen();
+
+        if (choice == "1") {
             while (true) {
                 cout << "--Weapons--  Coins -> $" << coins;
-                if (inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
+                if (!inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
                 cout << "\n(1) Physical\n(2) Magic\n(B) Back\nChoose: ";
-                cin >> choice; clearScreen();
-                if (choice=="1") displayItems({0,1,2}, "Physical");
-                else if (choice=="2") displayItems({3,4,5}, "Magic");
-                else if (choice=="B"||choice=="b") break;
+                cin >> choice;
+                clearScreen();
+
+                if (choice == "1") displayItems({0,1,2}, "Physical");
+                else if (choice == "2") displayItems({3,4,5}, "Magic");
+                else if (choice == "B" || choice == "b") break;
             }
-        } else if (choice=="2") displayItems({6,7,8}, "Armors");
-        else if (choice=="B"||choice=="b") break;
+        }
+        else if (choice == "2") displayItems({6,7,8}, "Armors");
+        else if (choice == "B" || choice == "b") break;
     }
 }
 
@@ -100,9 +125,16 @@ void inventoryMenu() {
     cout << "--Inventory--  Coins -> $" << coins;
     if (!inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
     cout << "\n\n";
-    if (inventoryPrice.empty()) cout << "(empty)\n";
-    else for (int shopItem : inventoryPrice) cout << allItems[shopItem].name << "\n";
-    cout << "\n(B) Back\n"; string tmp; cin >> tmp; clearScreen();
+
+    if (inventoryPrice.empty())
+        cout << "(empty)\n";
+    else
+        for (int shopItem : inventoryPrice)
+            cout << allItems[shopItem].name << "\n";
+
+    cout << "\n(B) Back\n";
+    string x; cin >> x;
+    clearScreen();
 }
 
 void checkoutMenu() {
@@ -113,27 +145,56 @@ void checkoutMenu() {
     }
 
     int atk=0, mgk=0, hp=0, totalPrice=0;
+
     cout << "--Checkout--\n\n";
-    cout << left << setw(18) << "Item Name" << setw(12) << "Stat" << setw(8) << "Price\n";
-    cout << "--------------------------------------\n";
+    cout << left << setw(20) << "Item Name"
+         << setw(12) << "Stat" << "Price\n";
+    cout << "--------------------------------------------------\n";
+
     for (int shopItem : inventoryPrice) {
         const Item& it = allItems[shopItem];
-        cout << setw(18) << it.name << setw(12) << it.stat << "$" << it.price << "\n";
-        totalPrice += it.price;
-        if (it.stat.find("ATK")!=string::npos) atk += stoi(it.stat.substr(1));
-        if (it.stat.find("MGK")!=string::npos) mgk += stoi(it.stat.substr(1));
-        if (it.stat.find("HP") !=string::npos) hp  += stoi(it.stat.substr(1));
-    }
-    cout << "--------------------------------------\n";
-    cout << "Total Stats              |Total: $" << totalPrice << "\n";
-    cout << "ATK +" << atk << "                 |Coins -$" << coins << "\n";
-    cout << "MGK +" << mgk << "                 |      -------\n";
-    cout << "HP +" << hp << "                  |Coins ->$" << (coins-totalPrice) << "\n\n";
+        cout << left << setw(20) << it.name 
+             << setw(12) << it.stat 
+             << "$" << it.price << "\n";
 
-    cout << "(F) Finalize Purchase\n(1) Start New Game\n(B) Back\nChoose: ";
- 
-       string choice; cin >> choice; clearScreen();
-     if (choice=="1") { coins=6000; inventoryPrice.clear(); cout << "Game restarted.\n"; Continue(); }
+        totalPrice += it.price;
+
+        if (it.stat.find("ATK") != string::npos) atk += extractValue(it.stat);
+        if (it.stat.find("MGK") != string::npos) mgk += extractValue(it.stat);
+        if (it.stat.find("HP")  != string::npos) hp  += extractValue(it.stat);
+    }
+
+    cout << "--------------------------------------------------\n";
+
+    cout << left << setw(22) << "Total Stats"
+         << "| Total: $" << totalPrice << "\n";
+
+    cout << left << setw(22) << ("ATK +" + to_string(atk))
+         << "| Coins -$" << totalPrice << "\n";
+
+    cout << left << setw(22) << ("MGK +" + to_string(mgk))
+         << "|        -------" << "\n";
+
+    cout << left << setw(22) << ("HP +" + to_string(hp))
+         << "| Coins ->$" << (coins - totalPrice) << "\n\n";
+
+    cout << "(F) Finalize Purchase\n(1) Start New Terminal\n(B) Back\nChoose: ";
+    string choice;
+    cin >> choice;
+    clearScreen();
+
+    if (choice=="F" || choice=="f") {
+        coins -= totalPrice;
+        inventoryPrice.clear();
+        cout << "Purchase finalized.\n";
+        Continue();
+    }
+    else if (choice=="1") {
+        coins = 6000;
+        inventoryPrice.clear();
+        cout << "Terminal restarted.\n";
+        Continue();
+    }
 }
 
 int main() {
@@ -143,19 +204,20 @@ int main() {
 
     while (true) {
         cout << "--Main Menu--  Coins -> $" << coins;
-        if (inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
-        
+        if (!inventoryPrice.empty()) cout << " ->" << pendingTotalPrice();
+
         cout << "\n(1) Tutorial\n(2) Shop\n(3) Inventory\n(4) Checkout\n\nChoose: ";
-        string choice; cin >> choice; 
+        string choice;
+        cin >> choice;
         clearScreen();
 
-        if (choice=="1") {
+        if (choice == "1") {
             cout << "---Tutorial---\nPick items to add to your inventory.\nCoins are deducted after checkout.\n";
             Continue();
         }
-        else if (choice=="2") shopMenu();
-        else if (choice=="3") inventoryMenu();
-        else if (choice=="4") checkoutMenu();
+        else if (choice == "2") shopMenu();
+        else if (choice == "3") inventoryMenu();
+        else if (choice == "4") checkoutMenu();
     }
 
     return 0;
