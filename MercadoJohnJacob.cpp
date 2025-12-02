@@ -10,10 +10,11 @@ struct Item {
     string name;
     string stat;
     int price;
-    int type; // 0=Physical,1=Magic,2=Armor
+    int type;
 };
 
-int coins = 6000;
+int coins = 9000;
+
 vector<Item> allItems = {
     {"Dagger", "+15 ATK", 250, 0}, {"Legion Sword", "+60 ATK", 910, 0}, {"Blade of Despair", "+160 ATK", 3010, 0},
     {"Mystery Codex", "+15 HP", 300, 1}, {"Magic Wand", "+45 MGK", 820, 1}, {"Holy Crystal", "+185 MGK", 3000, 1},
@@ -21,6 +22,7 @@ vector<Item> allItems = {
 };
 
 vector<int> inventoryPrice;
+vector<int> stock(9, 3);
 
 void clearScreen() {
     system("cls");
@@ -45,20 +47,21 @@ int pendingTotalPrice() {
 }
 
 void addItem(int shopItem) {
-    if (find(inventoryPrice.begin(), inventoryPrice.end(), shopItem) != inventoryPrice.end())
-        cout << "You already have this item in your Inventory.";
+    if (stock[shopItem] <= 0)
+        cout << "This item is out of stock.";
     else if (pendingTotalPrice() + allItems[shopItem].price > coins)
         cout << "You don't have enough coins to buy this Item.";
     else {
         inventoryPrice.push_back(shopItem);
+        stock[shopItem]--;
         cout << "Successfully added " << allItems[shopItem].name << " to your Inventory.";
     }
     Continue();
 }
 
 int extractValue(const string& stat) {
-    int spacePos = stat.find(" ");
-    return stoi(stat.substr(1, spacePos - 1));
+    int value = stat.find(" ");
+    return stoi(stat.substr(1, value - 1));
 }
 
 void displayItems(const vector<int>& items, const string title) {
@@ -68,13 +71,14 @@ void displayItems(const vector<int>& items, const string title) {
         cout << "\n\n";
 
         cout << left << setw(4) << "#" << setw(20) << "Item Name"
-             << setw(12) << "Stat" << "Price\n";
-        cout << "--------------------------------------------------\n";
+             << setw(12) << "Stat" << setw(8) << "Stock" << "Price\n";
+        cout << "----------------------------------------------------------\n";
 
         for (size_t i = 0; i < items.size(); ++i) {
             const Item& it = allItems[items[i]];
             cout << left << setw(4) << "(" + to_string(i+1) + ")"
                  << setw(20) << it.name << setw(12) << it.stat
+                 << setw(8) << stock[items[i]]
                  << "$" << it.price << "\n";
         }
 
@@ -158,7 +162,6 @@ void checkoutMenu() {
              << "$" << it.price << "\n";
 
         totalPrice += it.price;
-
         if (it.stat.find("ATK") != string::npos) atk += extractValue(it.stat);
         if (it.stat.find("MGK") != string::npos) mgk += extractValue(it.stat);
         if (it.stat.find("HP")  != string::npos) hp  += extractValue(it.stat);
@@ -190,8 +193,9 @@ void checkoutMenu() {
         Continue();
     }
     else if (choice=="1") {
-        coins = 6000;
+        coins = 9000;
         inventoryPrice.clear();
+        stock.assign(9, 3);
         cout << "Terminal restarted.\n";
         Continue();
     }
