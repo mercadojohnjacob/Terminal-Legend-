@@ -206,7 +206,7 @@ void checkoutMenu() {
 
 int main() {
     clearScreen();
-    cout << "Welcome to Terminal Legends: Shop Shop!\nJohn Jacob M. Mercado\n1 CpE B\n";
+    cout << "Welcome to Terminal Legends: Shop Shop!\n\nJohn Jacob M. Mercado\n1 CpE B\n";
     Continue();
 
     while (true) {
