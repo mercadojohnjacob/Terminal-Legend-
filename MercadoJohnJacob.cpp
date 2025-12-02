@@ -206,25 +206,21 @@ void checkoutMenu() {
 
 int main() {
     clearScreen();
-    cout << "Welcome to Terminal Legends: Shop Shop!\n\nJohn Jacob M. Mercado\n1 CpE B\n";
+    cout << "Welcome to Terminal Legends: Shop Shop!\nJohn Jacob M. Mercado\n1 CpE B\n";
     Continue();
 
     while (true) {
         cout << "--Main Menu--  Coins -> $" << coins;
         if (!itemInventory.empty()) cout << " ->" << pendingTotalPrice();
 
-        cout << "\n(1) Tutorial\n(2) Shop\n(3) Inventory\n(4) Checkout\n\nChoose: ";
+        cout << "\n(1) Shop\n(2) Inventory\n(3) Checkout\n\nChoose: ";
         string choice;
         cin >> choice;
         clearScreen();
 
-        if (choice == "1") {
-            cout << "---Tutorial---\nPick items to add to your inventory.\nCoins are deducted after checkout.\n";
-            Continue();
-        }
-        else if (choice == "2") shopMenu();
-        else if (choice == "3") inventoryMenu();
-        else if (choice == "4") checkoutMenu();
+        if (choice == "1") shopMenu();
+        else if (choice == "2") inventoryMenu();
+        else if (choice == "3") checkoutMenu();
     }
 
     return 0;
